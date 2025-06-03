@@ -1,2 +1,2 @@
-# manual-sort
-A tool for exploring/visualizing sorting algorithms manually
+Move the squares, explore them algorithms.
+Double click to rename.
