@@ -1,3 +1,3 @@
 Move the squares, explore them algorithms.
 
-Double click to rename.
+Double click to rename a square.
