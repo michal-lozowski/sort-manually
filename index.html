@@ -89,6 +89,8 @@
   <button class="btn" onclick="redo()" id="redoBtn" disabled>Redo →</button>
   <button class="btn" onclick="addSquare()">+ Square</button>
   <button class="btn" onclick="removeSquare()">- Square</button>
+  <button class="btn" onclick="addIndex()">+ Index</button>
+  <button class="btn" onclick="removeIndex()">- Index</button>
   <button class="btn" onclick="randomizeNumbers()">Randomize Numbers</button>
   <button class="btn" onclick="resetOutlines()">Reset Outlines</button>
   <label style="margin-left: 20px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
@@ -112,6 +114,7 @@
   let draggedSquare = null;
   let topZIndex = 1;
   let recentlyMoved = [];
+  let indexCount = 0; // Separate count for indices
   
   // Memory system
   let stateHistory = [];
@@ -119,6 +122,9 @@
   let isRestoringState = false;
 
   function initializeApp() {
+    // Initialize indexCount to match numeric squares
+    indexCount = numbers.filter(num => typeof num === 'number' || !isNaN(Number(num))).length;
+    
     createIndexNumbers();
     createSquares();
     organizeSquares();
@@ -142,7 +148,8 @@
     
     const showIndices = document.getElementById('showIndices').checked;
     
-    for (let i = 0; i < numbers.length; i++) {
+    // Create indices based on indexCount, not tied to numbers array
+    for (let i = 0; i < indexCount; i++) {
       const indexElement = document.createElement('div');
       indexElement.className = 'index-number';
       indexElement.textContent = i;
@@ -170,7 +177,21 @@
     square.textContent = content;
     square.style.cursor = 'move';
     square.style.top = '200px';
-    square.style.left = `${index * 60 + 60}px`;
+    
+    // Position based on content type
+    const isNumber = typeof content === 'number' || !isNaN(Number(content));
+    if (isNumber) {
+      // Count how many numeric squares exist before this one
+      let numericPosition = 0;
+      for (let i = 0; i < index; i++) {
+        if (typeof numbers[i] === 'number' || !isNaN(Number(numbers[i]))) {
+          numericPosition++;
+        }
+      }
+      square.style.left = `${numericPosition * 60 + 60}px`;
+    } else {
+      square.style.left = `${index * 60 + 60}px`;
+    }
     
     document.getElementById('container').appendChild(square);
 
@@ -302,7 +323,6 @@
     const randomNum = Math.floor(Math.random() * 100);
     numbers.push(randomNum);
     createSquare(randomNum, numbers.length - 1);
-    createIndexNumbers();
     saveState();
   }
 
@@ -312,8 +332,19 @@
       lastSquare.element.remove();
       squares.pop();
       numbers.pop();
-      createIndexNumbers();
       saveState();
+    }
+  }
+
+  function addIndex() {
+    indexCount++;
+    createIndexNumbers();
+  }
+
+  function removeIndex() {
+    if (indexCount > 0) {
+      indexCount--;
+      createIndexNumbers();
     }
   }
 
@@ -379,7 +410,7 @@
     squares = [];
     indexNumbers = [];
     
-    // Recreate index numbers
+    // Recreate index numbers (independent of state)
     createIndexNumbers();
     
     // Recreate squares with saved positions
