@@ -9,6 +9,10 @@
       padding: 20px;
       font-family: sans-serif;
       background: #f0f0f0;
+      touch-action: none; /* Prevent browser handling of touch events */
+      -webkit-touch-callout: none; /* Prevent callout on long-press */
+      -webkit-user-select: none; /* Prevent text selection during touch */
+      -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
     }
 
     .controls {
@@ -207,7 +211,9 @@
 
   function makeDraggable(el, squareObj) {
     let offsetX = 0, offsetY = 0, isDragging = false;
+    let lastTouchX = 0, lastTouchY = 0;
 
+    // Mouse Events
     el.addEventListener('mousedown', (e) => {
       if (e.target.tagName === 'INPUT' || el.contentEditable === 'true') return;
       
@@ -230,10 +236,53 @@
       }
     });
 
-    document.addEventListener('mouseup', (e) => {
+    document.addEventListener('mouseup', handleDragEnd);
+
+    // Touch Events
+    el.addEventListener('touchstart', (e) => {
+      if (e.target.tagName === 'INPUT' || el.contentEditable === 'true') return;
+      
+      e.preventDefault(); // Prevent scrolling while dragging
+      const touch = e.touches[0];
+      
+      isDragging = true;
+      draggedSquare = squareObj;
+      
+      // Calculate offset from the touch point to the square's position
+      offsetX = touch.clientX - el.offsetLeft;
+      offsetY = touch.clientY - el.offsetTop;
+      
+      // Store last touch position
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
+      
+      // Bring the dragged square to the front
+      topZIndex++;
+      el.style.zIndex = topZIndex;
+    });
+
+    document.addEventListener('touchmove', (e) => {
       if (isDragging && draggedSquare === squareObj) {
-      isDragging = false;
-        // Keep the higher z-index so it stays on top
+        e.preventDefault(); // Prevent scrolling while dragging
+        const touch = e.touches[0];
+        
+        // Update last touch position
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+        
+        const newLeft = touch.clientX - offsetX;
+        const newTop = touch.clientY - offsetY;
+        el.style.left = `${newLeft}px`;
+        el.style.top = `${newTop}px`;
+      }
+    });
+
+    document.addEventListener('touchend', handleDragEnd);
+    document.addEventListener('touchcancel', handleDragEnd);
+
+    function handleDragEnd() {
+      if (isDragging && draggedSquare === squareObj) {
+        isDragging = false;
         
         // Only track number squares for outlining
         const isNumber = typeof squareObj.content === 'number' || !isNaN(Number(squareObj.content));
@@ -263,7 +312,7 @@
         draggedSquare = null;
         saveState(); // Save state after drag
       }
-    });
+    }
   }
 
   function makeEditable(el, squareObj) {
