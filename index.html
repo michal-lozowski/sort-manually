@@ -9,10 +9,10 @@
       padding: 20px;
       font-family: sans-serif;
       background: #f0f0f0;
-      touch-action: none; /* Prevent browser handling of touch events */
-      -webkit-touch-callout: none; /* Prevent callout on long-press */
-      -webkit-user-select: none; /* Prevent text selection during touch */
-      -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+      touch-action: manipulation; /* Allow pinch-zoom and two-finger scroll */
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .controls {
@@ -52,6 +52,7 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
       font-size: 14px;
       font-weight: bold;
+      touch-action: none; /* Prevent touch actions only on draggable squares */
     }
 
     .square.recently-moved {
@@ -240,7 +241,10 @@
 
     // Touch Events
     el.addEventListener('touchstart', (e) => {
-      if (e.target.tagName === 'INPUT' || el.contentEditable === 'true') return;
+      // Only handle single-finger touches
+      if (e.touches.length !== 1 || e.target.tagName === 'INPUT' || el.contentEditable === 'true') {
+        return;
+      }
       
       e.preventDefault(); // Prevent scrolling while dragging
       const touch = e.touches[0];
@@ -262,6 +266,13 @@
     });
 
     document.addEventListener('touchmove', (e) => {
+      // Only handle single-finger touches
+      if (e.touches.length !== 1) {
+        isDragging = false;
+        draggedSquare = null;
+        return;
+      }
+      
       if (isDragging && draggedSquare === squareObj) {
         e.preventDefault(); // Prevent scrolling while dragging
         const touch = e.touches[0];
